@@ -1,0 +1,16 @@
+
+N	java:S106L"9Replace this use of System.out or System.err by a logger.(ºğûª
+\
+java:S1128"ARemove this unused import 'com.fei.service.ISeckillGoodsService'.(›¢¤ïùÿÿÿÿ
+k
+java:S1128"PRemove this unused import 'org.springframework.web.bind.annotation.CookieValue'.(¿”€ıÿÿÿÿÿ
+l
+java:S1128"QRemove this unused import 'org.springframework.web.bind.annotation.ResponseBody'.(•¶¶êøÿÿÿÿ
+V
+java:S1128";Remove this unused import 'org.thymeleaf.util.StringUtils'.(Í”‡‰üÿÿÿÿ
+X
+java:S1128"BRemove this unused import 'javax.servlet.http.HttpServletRequest'.(ø©¹…
+Y
+java:S1128"CRemove this unused import 'javax.servlet.http.HttpServletResponse'.(Á¨ïë
+Q
+java:S1128";Remove this unused import 'javax.servlet.http.HttpSession'.(í¨ô
