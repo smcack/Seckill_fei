@@ -4,7 +4,7 @@
 
     <!-- 通用查询映射结果 -->
     <resultMap id="BaseResultMap" type="com.fei.pojo.Order">
-        <result column="id" property="id" />
+        <id column="id" property="id" />
         <result column="user_id" property="userId" />
         <result column="goods_id" property="goodsId" />
         <result column="delivery_add_id" property="deliveryAddId" />

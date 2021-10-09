@@ -4,7 +4,7 @@
 
     <!-- 通用查询映射结果 -->
     <resultMap id="BaseResultMap" type="com.fei.pojo.Goods">
-        <result column="goods_id" property="goodsId" />
+        <id column="id" property="id" />
         <result column="goods_name" property="goodsName" />
         <result column="goods_title" property="goodsTitle" />
         <result column="goods_img" property="goodsImg" />
@@ -15,7 +15,7 @@
 
     <!-- 通用查询结果列 -->
     <sql id="Base_Column_List">
-        goods_id,
+        id,
         goods_name, goods_title, goods_img, goods_detail, goods_price, goods_stock
     </sql>
 

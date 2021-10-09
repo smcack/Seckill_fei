@@ -16,6 +16,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 /**
@@ -36,8 +37,16 @@ public class SeckillContorller {
     @Autowired
     private RedisTemplate redisTemplate;
 
-    @RequestMapping("/doSeckill")
-    public String doSeckill(Model model, User user,Long goodsId){
+
+    /**
+     * 秒杀功能
+     * @param model
+     * @param user
+     * @param goodsId
+     * @return
+     */
+    @RequestMapping("/doSeckill2")
+    public String doSeckill2(Model model, User user,Long goodsId){
         //第一步：判断用户是否为空
         if(user == null){
             return "login";
@@ -64,7 +73,37 @@ public class SeckillContorller {
         model.addAttribute("goods", goods);
 
         return "orderDetail";
+    }
 
 
+    /**
+     * 秒杀功能页面静态化
+     * @param model
+     * @param user
+     * @param goodsId
+     * @return
+     */
+    @RequestMapping(value = "/doSeckill",method = RequestMethod.POST)
+    @ResponseBody
+    public ResBean doSeckill(User user,Long goodsId){
+        //第一步：判断用户是否为空
+        if(user == null){
+            return ResBean.error(ResBeanE.SESSION_ERROR);
+        }
+        //第二步：判断库存
+        GoodsVo goods = goodsService.findGoodsVoById(goodsId);
+        if(goods.getStockCount() < 1){
+            return ResBean.error(ResBeanE.EMPTY_STOCK);
+        }
+        //第三步：判断是否重复抢购
+        SeckillOrder seckillOrder =
+                seckillOrderService.getOne(new QueryWrapper<SeckillOrder>().eq("user_id", user.getId())
+                        .eq("goods_id", goodsId));
+        if(seckillOrder != null){
+            return ResBean.error(ResBeanE.REPEATE_ERROR);
+        }
+        //第四步：进入秒杀
+        Order order = orderService.seckill(user,goods);
+        return ResBean.success(order);
     }
 }

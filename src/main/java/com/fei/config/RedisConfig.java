@@ -1,6 +1,7 @@
 package com.fei.config;
 
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -14,6 +15,7 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
  * @author: fei
  * @create: 2021-09-29 20:44
  */
+@Configuration
 public class RedisConfig {
     @Bean
     public RedisTemplate<String,Object> redisTemplate(RedisConnectionFactory redisConnectionFactory){
@@ -26,7 +28,6 @@ public class RedisConfig {
         redisTemplate.setHashKeySerializer(new StringRedisSerializer());
         //hash类型 value序列化
         redisTemplate.setHashValueSerializer(new GenericJackson2JsonRedisSerializer());
-
         //注入连接工厂
         redisTemplate.setConnectionFactory(redisConnectionFactory);
 

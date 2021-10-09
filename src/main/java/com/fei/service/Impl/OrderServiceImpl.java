@@ -15,6 +15,7 @@ import com.fei.service.ISeckillGoodsService;
 import com.fei.service.ISeckillOrderService;
 import com.fei.utils.MD5Utils;
 import com.fei.vo.GoodsVo;
+import com.fei.vo.OrderDetailVo;
 import com.fei.vo.ResBeanE;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -47,12 +48,15 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     @Autowired
     private RedisTemplate redisTemplate;
 
+
+
     /**
      * 秒杀
      * @param user
      * @param goods
      * @return
      */
+
     @Transactional
     @Override
     public Order seckill(User user, GoodsVo goods) {
@@ -90,25 +94,26 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         valueOperations.set("order:"+user.getId()+":"+goods.getId(), seckillOrder);
         return order;
     }
-//
-//    /**
-//     * 订单详情
-//     * @param orderId
-//     * @return
-//     */
-//    @Override
-//    public OrderDetailVo detail(Long orderId) {
-//        if(orderId == null){
-//            throw new GlobalException(ResBeanE.ORDER_NOT_EXIST);
-//        }
-//        Order order = orderMapper.selectById(orderId);
-//        GoodsVo goodsVo = goodsService.findGoodsVoById(order.getGoodsId());
-//        OrderDetailVo detail = new OrderDetailVo();
-//        detail.setOrder(order);
-//        detail.setGoodsVo(goodsVo);
-//
-//        return detail;
-//    }
+
+
+    /**
+     * 订单详情
+     * @param orderId
+     * @return
+     */
+    @Override
+    public OrderDetailVo detail(Long orderId) {
+        if(orderId == null){
+            throw new GlobalException(ResBeanE.ORDER_NOT_EXIST);
+        }
+        Order order = orderMapper.selectById(orderId);
+        GoodsVo goodsVo = goodsService.findGoodsVoById(order.getGoodsId());
+        OrderDetailVo detail = new OrderDetailVo();
+        detail.setOrder(order);
+        detail.setGoodsVo(goodsVo);
+        return detail;
+    }
+
 //
 //    /**
 //     * 获取秒杀地址
