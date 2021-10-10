@@ -4,7 +4,7 @@
 
     <!-- 通用查询映射结果 -->
     <resultMap id="BaseResultMap" type="com.fei.pojo.SeckillOrder">
-        <result column="id" property="id" />
+        <id column="id" property="id" />
         <result column="user_id" property="userId" />
         <result column="order_id" property="orderId" />
         <result column="goods_id" property="goodsId" />
@@ -12,8 +12,7 @@
 
     <!-- 通用查询结果列 -->
     <sql id="Base_Column_List">
-        id,
-        user_id, order_id, goods_id
+        id, user_id, order_id, goods_id
     </sql>
 
 </mapper>

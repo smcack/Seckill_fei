@@ -2,6 +2,7 @@ package com.fei.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fei.pojo.SeckillOrder;
+import com.fei.pojo.User;
 
 /**
  * *
@@ -13,4 +14,6 @@ import com.fei.pojo.SeckillOrder;
  */
 public interface ISeckillOrderService extends IService<SeckillOrder> {
 
+
+    Long getResult(User user, Long goodsId);
 }

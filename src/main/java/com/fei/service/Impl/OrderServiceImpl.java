@@ -68,8 +68,8 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         boolean result = seckillGoodsService.update(new UpdateWrapper<SeckillGoods>().setSql("stock_count = " + "stock_count-1")
                 .eq("goods_id", goods.getId()).gt("stock_count", 0));
         if(seckillGoods.getStockCount() < 1){
-            //判断是否还有库存
-            valueOperations.set("isStockEmpty"+goods.getId(), "0");
+            //判断是否还有库存,没有库存，标记到redis
+            valueOperations.set("isStockEmpty:"+goods.getId(), "0");
             return null;
         }
         //生成订单

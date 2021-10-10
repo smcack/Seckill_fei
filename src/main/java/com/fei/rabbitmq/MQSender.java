@@ -72,12 +72,12 @@ public class MQSender {
 //    }
 
 
-//    /**
-//     * 发送秒杀信息
-//     * @param message
-//     */
-//    public void sendSeckillMessage(String message){
-//        log.info("发送消息"  + message);
-//        rabbitTemplate.convertAndSend("seckillExchange","seckill.message",message);
-//    }
+    /**
+     * 发送秒杀信息
+     * @param message
+     */
+    public void sendSeckillMessage(String message){
+        log.info("发送消息"  + message);
+        rabbitTemplate.convertAndSend("seckillExchange","seckill.message",message);
+    }
 }

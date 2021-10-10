@@ -83,7 +83,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         if (user != null) {
             CookieUtil.setCookie(request, response, "userTicket", userTicket);
         }
-        System.out.println("user" + user.toString());
         return user;
     }
 

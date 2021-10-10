@@ -1,6 +1,12 @@
 package com.fei.rabbitmq;
 
 import com.alibaba.fastjson.JSON;
+import com.fei.pojo.SeckillMessage;
+import com.fei.pojo.SeckillOrder;
+import com.fei.pojo.User;
+import com.fei.service.IGoodsService;
+import com.fei.service.IOrderService;
+import com.fei.vo.GoodsVo;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -65,32 +71,32 @@ public class MQReceiver {
 
 
 
-//    @Autowired
-//    private IGoodsService goodsService;
-//    @Autowired
-//    private RedisTemplate redisTemplate;
-//    @Autowired
-//    private IOrderService orderService;
-//
-//    @RabbitListener(queues = "seckillQueue")
-//    public void receive(String message){
-//        log.info("接收的消息；" + message);
-//        SeckillMessage seckillMessage = JSON.parseObject(message, SeckillMessage.class);
-//        Long goodsId = seckillMessage.getGoodsId();
-//        User user = seckillMessage.getUser();
-//        //判断库存
-//        GoodsVo goodsVo = goodsService.findGoodsVoByGoodsId(goodsId);
-//        if(goodsVo.getStockCount() < 1){
-//            return;
-//        }
-//
-//        //判断是否重复抢购
-//        SeckillOrder seckillOrder = (SeckillOrder) redisTemplate.opsForValue()
-//                .get("order:" + user.getId() + ":" + goodsId);
-//        if (seckillOrder != null) {
-//            return;
-//        }
-//        //下单操作
-//        orderService.seckill(user, goodsVo);
-//    }
+    @Autowired
+    private IGoodsService goodsService;
+    @Autowired
+    private RedisTemplate redisTemplate;
+    @Autowired
+    private IOrderService orderService;
+
+    @RabbitListener(queues = "seckillQueue")
+    public void receive(String message){
+        log.info("接收的消息；" + message);
+        SeckillMessage seckillMessage = JSON.parseObject(message, SeckillMessage.class);
+        Long goodsId = seckillMessage.getGoodsId();
+        User user = seckillMessage.getUser();
+        //判断库存
+        GoodsVo goodsVo = goodsService.findGoodsVoById(goodsId);
+        if(goodsVo.getStockCount() < 1){
+            return;
+        }
+
+        //判断是否重复抢购
+        SeckillOrder seckillOrder = (SeckillOrder) redisTemplate.opsForValue()
+                .get("order:" + user.getId() + ":" + goodsId);
+        if (seckillOrder != null) {
+            return;
+        }
+        //下单操作
+        orderService.seckill(user, goodsVo);
+    }
 }

@@ -13,10 +13,7 @@ import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.util.StringUtils;
-import org.springframework.web.bind.annotation.CookieValue;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 import org.thymeleaf.context.WebContext;
 import org.thymeleaf.spring5.view.ThymeleafViewResolver;
 
@@ -56,8 +53,7 @@ public class GoodsController {
      */
     @RequestMapping(value = "/toList",produces = "text/html;charset=utf-8")
     @ResponseBody
-    public String toList(Model model, User user,
-                         HttpServletRequest request, HttpServletResponse response){
+    public String toList(Model model, User user, HttpServletRequest request, HttpServletResponse response){
         //Redis中获取页面，如果不为空，直接返回页面
         ValueOperations valueOperations = redisTemplate.opsForValue();
         String html = (String)valueOperations.get("goodsList");
