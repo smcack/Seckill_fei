@@ -18,7 +18,6 @@
     <div class="panel-heading">秒杀商品详情</div>
     <div class="panel-body">
         <span id="userTip"> 您还没有登录，请登陆后再操作<br/></span>
-        <span>没有收货地址的提示。。。</span>
     </div>
     <table class="table" id="goods">
         <tr>
@@ -37,9 +36,16 @@
                 <span id="seckillTip"></span>
             </td>
             <td>
-                <button class="btn btn-primary btn-block" type="button" id="buyButton" onclick="doSeckill()">立即秒杀
-                    <input type="hidden" name="goodsId" id="goodsId">
-                </button>
+                <div class="row">
+                    <div class="form-inline">
+                        <img id="captchaImg" onclick="refreshCapthcha()" width="130" height="32" style="display: none"/>
+                        <input id="captcha" class="form-control" style="display: none">
+                        <button class="btn btn-primary" type="button" id="buyButton" onclick="getSeckillPath()">立即秒杀
+                            <input type="hidden" name="goodsId" id="goodsId">
+                        </button>
+                    </div>
+                </div>
+
             </td>
         </tr>
         <tr>
@@ -62,32 +68,38 @@
 
         getDetails();
     });
-    
-    // function getSeckillPath() {
-    //     var goodsId = $("#goodsId").val();
-    //     $.ajax({
-    //         url:"/seckill/path",
-    //         type:"GET",
-    //         data:{
-    //             goodsId:goodsId
-    //         },
-    //         success:function (data) {
-    //             if(data.code == 200) {
-    //                 var path = data.obj;
-    //                 doSeckill(path)
-    //             }else{
-    //                 layer.msg(data.message)
-    //             }
-    //         },
-    //         error:function () {
-    //                 layer.msg("客户端请求错误")
-    //         }
-    //     })
-    // }
 
-    function doSeckill() {
+    function refreshCapthcha(){
+        $("#captchaImg").attr("src","/seckill/captcha?goodsId="+$("#goodsId").val()+"&time="+new Date());
+    }
+
+    function getSeckillPath() {
+        var goodsId = $("#goodsId").val();
+        var captcha = $("#captcha").val();
         $.ajax({
-            url: '/seckill/doSeckill',
+            url:"/seckill/path",
+            type:"GET",
+            data:{
+                goodsId:goodsId,
+                captcha:captcha
+            },
+            success:function (data) {
+                if(data.code == 200) {
+                    var path = data.obj;
+                    doSeckill(path)
+                }else{
+                    layer.msg(data.message)
+                }
+            },
+            error:function () {
+                    layer.msg("客户端请求错误")
+            }
+        })
+    }
+
+    function doSeckill(path) {
+        $.ajax({
+            url: '/seckill/'+path+'/doSeckill',
             type: 'POST',
             data: {
                 goodsId: $("#goodsId").val()
@@ -107,8 +119,7 @@
         });
         }
 
-
-        function getResult(goodsId) {
+    function getResult(goodsId) {
             g_showLoading();
             $.ajax({
                 url:"/seckill/result",
@@ -125,7 +136,7 @@
                             //轮询
                             setTimeout(function () {
                                 getResult(goodsId);},
-                                10);
+                                200);
                             }else {
                             layer.confirm("恭喜你，秒杀成功！查看订单？",{btn:["确定","取消"]},
                             function () {
@@ -139,7 +150,6 @@
                 }
             });
         }
-
 
     function getDetails() {
         var goodsId = g_getQueryString("goodsId");
@@ -196,9 +206,15 @@
                 clearTimeout(timeout);
             }
             $("#seckillTip").html("秒杀进行中")
+            $("#captchaImg").attr("src","/seckill/captcha?goodsId="+$("#goodsId").val()+"&time="+new Date());
+            $("#captchaImg").show();
+            $("#captcha").show();
+
         } else {
             $("#buyButton").attr("disabled", true);
             $("#seckillTip").html("秒杀已经结束");
+            $("#captchaImg").hide();
+            $("#captcha").hide();
         }
     }
 

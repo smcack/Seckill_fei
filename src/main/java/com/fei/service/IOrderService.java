@@ -20,4 +20,10 @@ public interface IOrderService extends IService<Order> {
 
     OrderDetailVo detail(Long orderId);
 
+    boolean checkPath(User user, Long goodsId, String path);
+
+    String createPath(User user, Long goodsId);
+
+    boolean checkCaptcha(User user, Long goodsId, String captcha);
+
 }

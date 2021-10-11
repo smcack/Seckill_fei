@@ -2,6 +2,8 @@ package com.fei.controller;
 
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.fei.config.AccessLimit;
+import com.fei.exception.GlobalException;
 import com.fei.pojo.Order;
 import com.fei.pojo.SeckillMessage;
 import com.fei.pojo.SeckillOrder;
@@ -13,21 +15,26 @@ import com.fei.service.ISeckillOrderService;
 import com.fei.vo.GoodsVo;
 import com.fei.vo.ResBean;
 import com.fei.vo.ResBeanE;
+import com.wf.captcha.ArithmeticCaptcha;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
+import org.springframework.data.redis.core.script.RedisScript;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.util.CollectionUtils;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 位置：com.fei.controller
@@ -37,6 +44,7 @@ import java.util.Map;
 @SuppressWarnings("ALL")
 @RequestMapping("/seckill")
 @Controller
+@Slf4j
 public class SeckillContorller implements InitializingBean {
 
     @Autowired
@@ -49,6 +57,8 @@ public class SeckillContorller implements InitializingBean {
     private RedisTemplate redisTemplate;
     @Autowired
     private MQSender mqSender;
+    @Autowired
+    private RedisScript<Long> script;
 
     private Map<Long,Boolean> EmptyStockMap = new HashMap<>();
 
@@ -97,14 +107,19 @@ public class SeckillContorller implements InitializingBean {
      * @param goodsId
      * @return
      */
-    @RequestMapping(value = "/doSeckill",method = RequestMethod.POST)
+    @RequestMapping(value = "/{path}/doSeckill",method = RequestMethod.POST)
     @ResponseBody
-    public  ResBean doSeckill(User user,Long goodsId){
+    public  ResBean doSeckill(@PathVariable String path, User user, Long goodsId){
         //第一步：判断用户是否为空
         if(user == null){
             return ResBean.error(ResBeanE.SESSION_ERROR);
         }
         ValueOperations valueOperations = redisTemplate.opsForValue();
+        //随机url检测
+        boolean check = orderService.checkPath(user,goodsId,path);
+        if(!check){
+            return ResBean.error(ResBeanE.REQUEST_ILLEGAL);
+        }
         //判断是否重复抢购
         SeckillOrder seckillOrder =
                 seckillOrderService.getOne(new QueryWrapper<SeckillOrder>().eq("user_id", user.getId())
@@ -118,6 +133,9 @@ public class SeckillContorller implements InitializingBean {
 //        }
         //预见库存
         Long stock = valueOperations.decrement("seckillGoods:" + goodsId);
+        //用lua脚本实现redis分布式锁
+        //Long stock = (Long) redisTemplate.execute(script, Collections.singletonList("seckillGoods:" + goodsId), Collections.EMPTY_LIST);
+
         if(stock<0){
             valueOperations.increment("seckillGoods:" + goodsId);
             return ResBean.error(ResBeanE.EMPTY_STOCK);
@@ -125,9 +143,12 @@ public class SeckillContorller implements InitializingBean {
         //下单
         SeckillMessage seckillMessage = new SeckillMessage(user, goodsId);
         //发送下单消息
+        //因为用了rabbitMq，变成了异步操作，能快速返回库存结果，会提供一个流量削峰的作用
         mqSender.sendSeckillMessage(JSON.toJSONString(seckillMessage));
         return ResBean.success(0);
     }
+
+
     @RequestMapping(value = "/result",method = RequestMethod.GET)
     @ResponseBody
     public ResBean getResult(User user,Long goodsId){
@@ -137,6 +158,61 @@ public class SeckillContorller implements InitializingBean {
         Long orderId = seckillOrderService.getResult(user, goodsId);
         return ResBean.success(orderId);
     }
+
+    @AccessLimit(second=5,maxCount=5,needLogin=true)
+    @GetMapping("/path")
+    @ResponseBody
+    public ResBean getPath(User user, Long goodsId, String captcha, HttpServletRequest request){
+        if (user == null){
+            return ResBean.error(ResBeanE.SESSION_ERROR);
+        }
+        ValueOperations valueOperations = redisTemplate.opsForValue();
+
+        //限制访问次数，5秒内访问5次
+        String uri = request.getRequestURI();
+        //captcha = "0";
+//        Integer count = (Integer)valueOperations.get(uri + ":" + user.getId());
+//        if(count == null){
+//            valueOperations.set(uri + ":" + user.getId(), 1, 5, TimeUnit.SECONDS);
+//        }else if (count < 5){
+//            valueOperations.increment(uri + ":" + user.getId());
+//        }else {
+//            return ResBean.error(ResBeanE.ACCESS_LIMIT_REAHCED);
+//        }
+        boolean check = orderService.checkCaptcha(user, goodsId, captcha);
+        if(!check)
+            return ResBean.error(ResBeanE.ERROR_CAPTCHA);
+
+        String str = orderService.createPath(user,goodsId);
+
+        return ResBean.success(str);
+    }
+
+    /**
+     * 生成验证码
+     */
+    @GetMapping("/captcha")
+    @ResponseBody
+    public void verifyCode(User user, Long goodsId, HttpServletResponse response){
+        if(user == null || goodsId <0){
+            throw new GlobalException(ResBeanE.REQUEST_ILLEGAL);
+        }
+        //设置请求头为输出的图片的类型
+        response.setContentType("image/jpg");
+        response.setHeader("Pargam", "No-cache");
+        response.setHeader("Cache-Control","no-cache");
+        response.setDateHeader("Expires", 0);
+        //生成验证码，将结果放入Redis
+        ArithmeticCaptcha captcha = new ArithmeticCaptcha(130, 32, 3);
+        redisTemplate.opsForValue().set("captcha:"+user.getId()+":"+goodsId, captcha.text(), 60, TimeUnit.SECONDS);
+        try {
+            captcha.out(response.getOutputStream());
+        } catch (IOException e) {
+            log.error("验证码生成失败",e.getMessage());
+        }
+
+    }
+
 
 //        //第二步：判断库存
 //        GoodsVo goods = goodsService.findGoodsVoById(goodsId);
