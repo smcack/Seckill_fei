@@ -132,9 +132,9 @@ public class SeckillContorller implements InitializingBean {
 //            return  ResBean.error(ResBeanE.EMPTY_STOCK);
 //        }
         //预见库存
-        Long stock = valueOperations.decrement("seckillGoods:" + goodsId);
+        //Long stock = valueOperations.decrement("seckillGoods:" + goodsId);
         //用lua脚本实现redis分布式锁
-        //Long stock = (Long) redisTemplate.execute(script, Collections.singletonList("seckillGoods:" + goodsId), Collections.EMPTY_LIST);
+        Long stock = (Long) redisTemplate.execute(script, Collections.singletonList("seckillGoods:" + goodsId), Collections.EMPTY_LIST);
 
         if(stock<0){
             valueOperations.increment("seckillGoods:" + goodsId);

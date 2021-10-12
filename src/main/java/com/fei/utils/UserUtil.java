@@ -17,10 +17,6 @@ import java.util.List;
 
 /**
  * 生成用户工具类
-
- *
- * @author zhoubin
- * @since 1.0.0
  */
 public class UserUtil {
 	private static void createUser(int count) throws Exception {
@@ -37,6 +33,7 @@ public class UserUtil {
 			users.add(user);
 		}
 		System.out.println("create user");
+
 //		// 插入数据库
 //		 Connection conn = getConn();
 //		 String sql = "insert into t_user(login_count, nickname, reister_date, slat, password, id)values(?,?,?,?,?,?)";
@@ -54,7 +51,8 @@ public class UserUtil {
 //		 pstmt.close();
 //		 conn.close();
 //		 System.out.println("insert to db");
-//		登录，生成userTicket
+
+		//登录，生成userTicket
 		String urlString = "http://localhost:8080/login/doLogin";
 		File file = new File("D:\\桌面\\config.txt");
 		if (file.exists()) {
@@ -99,6 +97,7 @@ public class UserUtil {
 		System.out.println("over");
 	}
 
+	//连接数据库
 	private static Connection getConn() throws Exception {
 		String url = "jdbc:mysql://localhost:3306/seckill?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai";
 		String username = "root";

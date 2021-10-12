@@ -1,7 +1,9 @@
 package com.fei.controller;
 
 
+import com.fei.pojo.User;
 import com.fei.rabbitmq.MQSender;
+import com.fei.vo.ResBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -37,5 +39,10 @@ public class UserController {
 //        mqSender.send04("hello,green");
 //    }
 //
+    @RequestMapping("/info")
+    @ResponseBody
+    public ResBean info(User user ){
+        return ResBean.success(user);
+    }
 
 }

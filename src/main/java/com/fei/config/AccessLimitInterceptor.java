@@ -78,7 +78,7 @@ public class AccessLimitInterceptor implements HandlerInterceptor {
 	}
 
 	/**
-	 * 功能描述: 获取当前登录用户
+	 * 功能描述: 根据获取当前登录用户
 	 */
 	private User getUser(HttpServletRequest request, HttpServletResponse response) {
 		String ticket = CookieUtil.getCookieValue(request, "userTicket");
